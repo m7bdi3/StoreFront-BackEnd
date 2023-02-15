@@ -31,7 +31,7 @@ describe('Order Model', () => {
         const product: Product = await productStore.create({
             name: 'OrderSpec Product',
             price: 99,
-            id: 0
+            id: 1
         });
 
         product_id = product.id;

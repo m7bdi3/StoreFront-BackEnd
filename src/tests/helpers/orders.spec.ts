@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const Secret = require('jsonwebtoken');
 const { OrderStore } = require('../../models/order');
 const app = require('../../server');
-
+const server = require('../../server')
 const request = supertest(app);
 
 describe('Order Handler', () => {
@@ -51,7 +51,7 @@ describe('Order Handler', () => {
     });
 
     it('should create an order', async () => {
-        const res = await request
+        const res = await request(server)
             .post('/orders/create')
             .set('Authorization', `Bearer ${token}`)
             .send({
@@ -80,7 +80,7 @@ describe('Order Handler', () => {
     });
 
     it('should get all orders', async () => {
-        const res = await request
+        const res = await request(server)
             .get('/orders')
             .set('Authorization', `Bearer ${token}`);
 
@@ -88,7 +88,7 @@ describe('Order Handler', () => {
     });
 
     it('should get an order by id', async () => {
-        const res = await request
+        const res = await request(server)
             .get(`/orders/1`)
             .set('Authorization', `Bearer ${token}`);
 
@@ -96,7 +96,7 @@ describe('Order Handler', () => {
     });
 
     it('should delete an order by id', async () => {
-        const res = await request
+        const res = await request(server)
             .delete(`/orders/2`)
             .set('Authorization', `Bearer ${token}`);
 
