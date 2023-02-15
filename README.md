@@ -42,18 +42,18 @@ Here is a list of the packages used in this project and their installation comma
 Instructions: 
 Open a terminal or command prompt.
 - Switch to the postgres user by running the command:
-su postgres
+`su postgres`
 - Start the psql command-line interface by running:
-psql postgres
+`psql postgres`
 - Create a new database user and database by running the following SQL commands:
-CREATE USER full_stack_user WITH PASSWORD 'password123';
-CREATE DATABASE full_stack_dev;
+`CREATE USER full_stack_user WITH PASSWORD 'password123';`
+`CREATE DATABASE full_stack_dev;`
 - Connect to the new database by running:
-\c full_stack_dev
+`\c full_stack_dev`
 Grant all privileges on the new database to the user by running:
-GRANT ALL PRIVILEGES ON DATABASE full_stack_dev TO full_stack_user;
+`GRANT ALL PRIVILEGES ON DATABASE full_stack_dev TO full_stack_user;`
 - Test that the database is working by running the command:
-\dt
+`\dt`
 - If the database is working correctly, this command should output "No relations found."
 
 - To set up the database, follow these steps:
