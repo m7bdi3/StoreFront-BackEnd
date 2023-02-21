@@ -1,30 +1,37 @@
+import express from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
-import express, { Application, Request, Response } from 'express';
+import morgan from 'morgan';
+import cors from 'cors';
 
-import userRoutes from './handlers/users';
-import productRoutes from './handlers/products';
 import orderRoutes from './handlers/orders';
+import productRoutes from './handlers/products';
+import userRoutes from './handlers/users';
 
-const app: Application = express();
-let port = 3001;
-if (process.env.ENV === 'test') {
-    port = 4000
-}
+const app = express();
 
-app.use(bodyParser.json());
+// configure body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-app.get('/', (_req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../index.html'))
+// configure morgan
+app.use(morgan('dev'));
+
+// configure cors
+app.use(cors());
+
+// configure routes
+orderRoutes(app);
+productRoutes(app);
+userRoutes(app);
+
+// serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// start the server
+const PORT = 30001;
+app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
 });
 
-const server = app.listen(port, () => {
-    console.log(`Server is running on localhost:${port}`)
-})
-
-userRoutes(app);
-productRoutes(app);
-orderRoutes(app);
-
-export { app, server };
+export default app;

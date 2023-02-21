@@ -1,13 +1,13 @@
 import { Application, Request, Response } from 'express';
+import client from '../database';
 import { verifyToken, getTokenByUser } from '../handlers/helpers';
-import { User, store } from '../models/user';
+import { User, UserAuth, UserStore } from '../models/user';
+const userStore = new UserStore();
 
-const userStore = new store();
-
-const index = async (req: Request, res: Response) => {
+const index = async (_req: Request, res: Response) => {
     try {
         // Get all users from the user store
-        const users: User[] = await userStore.getUser();
+        const users: UserAuth[] = await userStore.getUser();
         // Send the list of users as the response
         res.json(users);
     } catch (err) {
@@ -16,49 +16,41 @@ const index = async (req: Request, res: Response) => {
     }
 };
 
-const create = async (req: Request, res: Response) => {
+const create = async (user: UserAuth): Promise<UserAuth> => {
     try {
-        // Get the user details from the request body
-        const firstname = req.body.firstname as unknown as string;
-        const lastname = req.body.lastname as unknown as string;
-        const username = req.body.username as unknown as string;
-        const password = req.body.password as unknown as string;
-
-        // Check if all required parameters are present
-        if (!firstname || !lastname || !username || !password) {
-            // If any parameter is missing, send a 400 Bad Request response with a message
-            res.status(400);
-            res.send(
-                'Some required parameters are missing! eg. :firstName, :lastName, :userName, :password'
-            );
-            return false;
+        // Check that the user object includes a username
+        if (!user.username) {
+            throw new Error('Username is required.');
         }
 
-        // Create a new user
-        const user: User = await userStore.create({
-            firstname,
-            lastname,
-            username,
-            password,
-        });
-
-        // Generate a token for the newly created user and send it as the response
-        res.json(getTokenByUser(user));
+        const conn = await client.connect();
+        const sql =
+            'INSERT INTO users (firstname, lastname, username, password_digest) VALUES ($1, $2, $3, $4) RETURNING *';
+        const result = await conn.query(sql, [
+            user.firstname,
+            user.lastname,
+            user.username,
+            user.password_digest,
+        ]);
+        conn.release();
+        return result.rows[0];
     } catch (err) {
-        // In case of any error, log it and send a 400 Bad Request response with the error message
-        console.log(err);
-        res.status(400).json(err);
+        throw new Error(`Could not create user. Error: ${err}`);
     }
 };
 
-const read = async (req: Request, res: Response) => {
+
+
+
+const read = async (req: Request, res: Response): Promise<void> => {
     try {
         // Get the id from the request parameters
-        const id = req.params.id as unknown as number;
+        const id = Number(req.params.id);
 
         // Check if the id is present in the request
         if (!id) {
-            return res.status(400).send('Missing required parameter :id.');
+             res.status(400).send('Missing required parameter :id.');
+             return;
         }
 
         // Get the user with the given id
@@ -66,14 +58,14 @@ const read = async (req: Request, res: Response) => {
 
         // Return the user in the response
         res.json(user);
-    } catch (e) {
-        // If there is an error, return a status of 400 (Bad Request) with the error in the response
-        res.status(400);
-        res.json(e);
+    } catch (err) {
+        // If there is an error, return a status of 400 (Bad Request) with the error message
+        res.status(400).json(err);
     }
 };
 
-const update = async (req: Request, res: Response) => {
+
+const update = async (req: Request, res: Response): Promise<void> => {
     try {
         // Get the id from the request parameters
         const id = req.params.id as unknown as number;
@@ -88,13 +80,14 @@ const update = async (req: Request, res: Response) => {
             res.send(
                 'Some required parameters are missing! eg. :firstName, :lastName, :id'
             );
-            return false;
+            
         }
 
         // Update the user with the given id
         const user: User = await userStore.update(id, {
             firstname,
             lastname,
+            username: ''
         });
 
         // Return the updated user in the response
@@ -104,6 +97,7 @@ const update = async (req: Request, res: Response) => {
         res.status(400).json(err);
     }
 };
+
 
 const deleteUser = async (req: Request, res: Response) => {
     try {
@@ -131,10 +125,10 @@ const authenticate = async (req: Request, res: Response) => {
     try {
         // Extract the username and password from the request body
         const username = (req.body.username as unknown as string) || 'ChrissAnne';
-        const password = (req.body.password as unknown as string) || 'password123';
+        const password_digest = (req.body.password_digest as unknown as string) || 'password123';
 
         // Return an error if either the username or password is missing
-        if (!username || !password) {
+        if (!username || !password_digest) {
             res.status(400);
             res.send(
                 'Some required parameters are missing! eg. :username, :password'
@@ -143,7 +137,7 @@ const authenticate = async (req: Request, res: Response) => {
         }
 
         // Authenticate the user
-        const user: User | null = await userStore.authenticate(username, password);
+        const user: User | null = await userStore.authenticate(username, password_digest);
 
         // Return an error if the authentication fails
         if (!user) {

@@ -1,22 +1,28 @@
-import { userAuth, user, User, store } from '../../models/user';
+import { User, UserAuth, UserStore } from '../../models/user';
 
-const userStore = new store();
+const userStore = new UserStore();
 
 describe('User Model', () => {
-  const user: userAuth = {
+  const user: UserAuth = {
     username: 'ChrisAnne',
     firstname: 'Chris',
     lastname: 'Anne',
-    password: 'password123',
+    password_digest: 'password123',
   };
 
-  async function createUser(user: userAuth) {
+  async function createUser(user: UserAuth): Promise<User> {
     return userStore.create(user);
   }
 
-  async function deleteUser(id: number) {
-    return userStore.deleteUser(id);
+
+  async function deleteUser(id: number): Promise<void> {
+    const result = await userStore.deleteUser(id);
+    if (!result) {
+      throw new Error(`Failed to delete user with ID ${id}`);
+    }
   }
+
+
 
   it('should have getUser method', () => {
     expect(userStore.getUser).toBeDefined();
@@ -35,7 +41,7 @@ describe('User Model', () => {
   });
 
   it('should create a user', async () => {
-    const createdUser = await createUser(user);
+    const createdUser: User = await createUser(user);
     if (createdUser) {
       expect(createdUser.username).toBe(user.username);
       expect(createdUser.firstname).toBe(user.firstname);
@@ -68,9 +74,11 @@ describe('User Model', () => {
 
   it('should update the user', async () => {
     const createdUser: User = await createUser(user);
-    const newUserData: user = {
+    const newUserData: UserAuth = {
       firstname: 'Kris',
       lastname: 'Han',
+      username: '',
+      password_digest: ''
     };
 
     const { firstname, lastname } = await userStore.update(createdUser.id, newUserData);

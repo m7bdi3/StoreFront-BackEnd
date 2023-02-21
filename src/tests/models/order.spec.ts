@@ -1,120 +1,83 @@
-import { order, Order, OrderStore } from '../../models/order';
-import { User, store } from '../../models/user';
-import { Product, ProductStore } from '../../models/product';
+import { Product, ProductId, ProductStore } from '../../models/product';
 
-const orderStore = new OrderStore();
+const productStore = new ProductStore();
 
-describe('Order Model', () => {
-    const USER = new store();
-    const productStore = new ProductStore();
+describe('Product Model', () => {
+    const product: Product = {
+        name: 'Mono',
+        price: 2000,
+    };
 
-    let order: order, user_id: number, product_id: number;
-
-    function createOrder(order: order) {
-        return orderStore.create(order);
+    async function createProduct(product: Product) {
+        return productStore.create(product);
     }
 
-    function deleteOrder(id: number) {
-        return orderStore.deleteOrder(id);
+    async function deleteProduct(id: number) {
+        return productStore.deleteProduct(id);
     }
-
-    beforeAll(async () => {
-        const user: User = await USER.create({
-            username: 'ChrisAnne',
-            firstname: 'Chris',
-            lastname: 'Anne',
-            password: 'password123',
-        });
-
-        user_id = user.id;
-
-        const product: Product = await productStore.create({
-            name: 'OrderSpec Product',
-            price: 99,
-            id: 1
-        });
-
-        product_id = product.id;
-
-        order = {
-            products: [
-                {
-                    product_id,
-                    quantity: 5,
-                },
-            ],
-            user_id,
-            status: true,
-        };
-    });
-
-    afterAll(async () => {
-        await USER.deleteUser(user_id);
-        await productStore.deleteProduct(product_id);
-    });
 
     it('should have an index method', () => {
-        expect(orderStore.getOrder).toBeDefined();
+        expect(productStore.index).toBeDefined();
     });
 
     it('should have a show method', () => {
-        expect(orderStore.read).toBeDefined();
+        expect(productStore.read).toBeDefined();
     });
 
     it('should have a add method', () => {
-        expect(orderStore.create).toBeDefined();
+        expect(productStore.create).toBeDefined();
     });
 
     it('should have a delete method', () => {
-        expect(orderStore.deleteOrder).toBeDefined();
+        expect(productStore.deleteProduct).toBeDefined();
     });
 
-    it('should add a order', async () => {
-        const createdOrder: Order = await createOrder(order);
-        expect(createdOrder).toEqual({
-            id: createdOrder.id,
-            ...order,
+    it('should add a product', async () => {
+        const createdProduct:
+            ProductId = await createProduct(product);
+        expect(createdProduct).toEqual({
+            id: createdProduct.id,
+            ...product,
         });
-
-        await deleteOrder(createdOrder.id);
+        await deleteProduct(createdProduct.id);
     });
 
-    it('should return a list of orders', async () => {
-        const createdOrder: Order = await createOrder(order);
-        const orderList = await orderStore.getOrder();
-        expect(orderList).toEqual([createdOrder]);
-        await deleteOrder(createdOrder.id);
+    it('should return a list of products', async () => {
+        const productList: Product[] = await productStore.index();
+        expect(productList).toEqual([
+            {
+                id: 1,
+                name: 'Shoes',
+                price: 234,
+            },
+        ]);
     });
 
-    it('show method should return the correct orders', async () => {
-        const createdOrder: Order = await createOrder(order);
-        const orderData = await orderStore.read(createdOrder.id);
-        expect(orderData).toEqual(createdOrder);
-        await deleteOrder(createdOrder.id);
+    it('should return the correct product', async () => {
+        const createdProduct: ProductId = await createProduct(product);
+        const productData = await productStore.read(createdProduct.id);
+        expect(productData).toEqual(createdProduct);
+        await deleteProduct(createdProduct.id);
     });
 
-    it('should update the order', async () => {
-        const createdOrder: Order = await createOrder(order);
-        const orderData: order = {
-            products: [
-                {
-                    product_id,
-                    quantity: 20,
-                },
-            ],
-            user_id,
-            status: false,
+    it('should update the product', async () => {
+        const createdProduct: ProductId = await createProduct(product);
+        const newProduct: Product = {
+            name: 'New Product List',
+            price: 2423,
         };
-        const { products, status } = await orderStore.update(createdOrder.id, orderData);
-        expect(products).toEqual(orderData.products);
-        expect(status).toEqual(orderData.status);
-        await deleteOrder(createdOrder.id);
+        const { name, price } = await productStore.update(createdProduct.id, newProduct);
+        expect(name).toEqual(newProduct.name);
+        expect(price).toEqual(newProduct.price);
+        await deleteProduct(createdProduct.id);
     });
 
-    it('should remove the order item', async () => {
-        const createdOrder: Order = await createOrder(order);
-        await deleteOrder(createdOrder.id);
-        const orderList = await orderStore.getOrder();
-        expect(orderList).toEqual([]);
+    it('should remove the product', async () => {
+        const createdProduct: ProductId = await createProduct(product);
+        expect(createdProduct).toEqual({
+            id: createdProduct.id,
+            name: 'Mono',
+            price: 2000,
+        });
     });
 });

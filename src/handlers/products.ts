@@ -2,136 +2,88 @@ import { Application, Request, Response } from 'express';
 import { Product, ProductStore } from '../models/product';
 import { verifyToken } from './helpers';
 
-// Initialize the product store
 const productStore = new ProductStore();
 
-// Get all products route
-const getAllProduct = async (req: Request, res: Response) => {
+const getAllProducts = async (req: Request, res: Response) => {
     try {
-        // Get all the products from the product store
         const products: Product[] = await productStore.index();
-
-        // Return the list of products as the response
         res.json(products);
-    } catch (err) {
-        // If there's an error, return a 400 Bad Request with the error message
-        res.status(400).json(err);
+    } catch (err: any) {
+        res.status(400).json({ error: err.message });
     }
 };
 
-// Create product route
-const create = async (req: Request, res: Response) => {
+const createProduct = async (req: Request, res: Response) => {
     try {
-        // Extract the product name and price from the request body
-        const name = req.body.name as unknown as string;
-        const price = req.body.price as unknown as number;
+        const { name, price } = req.body;
 
-        // Check if the name and price are present
         if (!name || !price) {
-            // If either the name or price is missing, return a 400 Bad Request with an error message
-            res.status(400);
-            res.send('Some required parameters are missing! eg. :name, :price');
-            return false;
+            return res.status(400).json({ error: 'Missing required parameters: name and price' });
         }
-        // Create the product
-        const product: Product = await productStore.create({
-            name, price,
-            id: 0
-        });
 
-        // Return the created product as the response
-        res.json({
-            product,
-        });
-    } catch (err) {
-        // If there's an error, return a 400 Bad Request with the error message
-        res.status(400).json(err);
+        const product: Product = await productStore.create({ name, price });
+
+        res.status(201).json({ product });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message });
     }
 };
 
-// Read product route
-const read = async (req: Request, res: Response) => {
+const readProduct = async (req: Request, res: Response) => {
     try {
-        // Extract the product id from the request parameters
-        const id = req.params.id as unknown as number;
+        const { id } = req.params;
 
-        // Check if the id is present
         if (!id) {
-            // If the id is missing, return a 400 Bad Request with an error message
-            res.status(400);
-            res.send('Missing required parameter :id.');
-            return false;
+            return res.status(400).json({ error: 'Missing required parameter: id' });
         }
-        // Read the product with the given id
-        const product: Product = await productStore.read(id);
 
-        // Return the product as the response
+        const product: Product = await productStore.read(Number(id));
+
         res.json(product);
-    } catch (err) {
-        // If there's an error, return a 400 Bad Request with the error message
-        res.status(400).json(err);
+    } catch (err: any) {
+        res.status(400).json({ error: err.message });
     }
 };
 
 
-const update = async (req: Request, res: Response) => {
+const updateProduct = async (req: Request, res: Response) => {
     try {
-        // Extract the product id, name, and price from the request
-        const id = req.params.id as unknown as number;
-        const name = req.body.name as unknown as string;
-        const price = req.body.price as unknown as number;
+        const { id } = req.params;
+        const { name, price } = req.body;
 
-        // If any of the required parameters are missing, return a 400 response with an error message
         if (!name || !price || !id) {
-            res.status(400);
-            res.send('Some required parameters are missing! eg. :name, :price, :id');
-            return false;
+            return res.status(400).json({ error: 'Missing required parameters: id, name, and price' });
         }
 
-        // Update the product in the product store
-        const product: Product = await productStore.update(id, {
-            name,
-            price,
-            id: 0
-        });
+        const product: Product | null 
+            = await productStore.update(Number(id), { id: Number(id), name, price });
 
-        // Return the updated product in the response
         res.json(product);
-    } catch (err) {
-        // If an error occurred, return a 400 response with the error
-        res.status(400).json(err);
+    } catch (err: any) {
+        res.status(400).json({ error: err.message });
     }
 };
 
 const deleteProduct = async (req: Request, res: Response) => {
     try {
-        // Extract the product id from the request
-        const id = req.params.id as unknown as number;
+        const { id } = req.params;
 
-        // If the id is missing, return a 400 response with an error message
         if (!id) {
-            res.status(400);
-            res.send('Missing required parameter :id.');
-            return false;
+            return res.status(400).json({ error: 'Missing required parameter: id' });
         }
 
-        // Delete the product from the product store
-        await productStore.deleteProduct(id);
+        await productStore.deleteProduct(Number(id));
 
-        // Return a success message
-        res.send(`Product with id ${id} successfully deleted.`);
-    } catch (err) {
-        // If an error occurred, return a 400 response with the error
-        res.status(400);
-        res.json(err);
+        res.json({ message: `Product with id ${id} has been deleted` });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message });
     }
 };
 
-// Define the product routes for the Express app
 export default function productRoutes(app: Application) {
-    app.get('/products', getAllProduct);
-    app.post('/products/create', verifyToken, create);
-    app.get('/products/:id', read);
-    app.put('/products/:id', verifyToken, update);
+    app.get('/products', getAllProducts);
+    app.post('/products/create', verifyToken, createProduct);
+    app.get('/products/:id', readProduct);
+    app.put('/products/:id', verifyToken, updateProduct);
     app.delete('/products/:id', verifyToken, deleteProduct);
 }

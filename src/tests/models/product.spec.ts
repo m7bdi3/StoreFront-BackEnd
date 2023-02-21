@@ -1,85 +1,100 @@
 import { Product, ProductId, ProductStore } from '../../models/product';
 
-const productStore = new ProductStore();
-
 describe('Product Model', () => {
-    const product: Product = {
-        name: 'Mono',
-        price: 2000,
-        id: 0
-    };
+  const productStore = new ProductStore();
 
-    async function createProduct(product: Product) {
-        return productStore.create(product);
-    }
+  beforeAll(async () => {
+    await productStore.deleteAllProducts();
+  });
 
-    async function deleteProduct(id: number) {
-        return productStore.deleteProduct(id);
-    }
+  afterAll(async () => {
+    await productStore.deleteAllProducts();
+  });
 
-    it('should have an index method', () => {
-        expect(productStore.index).toBeDefined();
+  describe('create', () => {
+    it('creates a new product', async () => {
+      const newProduct = await productStore.create({
+        name: 'new product',
+        price: 50,
+      });
+      expect(newProduct).toContain('id');
+      expect(newProduct.name).toEqual('new product');
+      expect(newProduct.price).toEqual(50);
+    });
+  });
+
+  describe('index', () => {
+    it('lists all products', async () => {
+      const products = await productStore.index();
+      expect(products.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('read', () => {
+    it('gets a product by id', async () => {
+      const newProduct = await productStore.create({
+        name: 'new product',
+        price: 50,
+      });
+      const product = await productStore.read(newProduct.id!);
+      expect(product).toContain('id');
+      expect(product.name).toEqual('new product');
+      expect(product.price).toEqual(50);
+    });
+  });
+
+  describe('update', () => {
+    it('updates a product by id', async () => {
+      const newProduct = await productStore.create({
+        name: 'new product',
+        price: 50,
+      });
+      const updatedProduct: ProductId  = await productStore.update(newProduct.id!, {
+        name: 'updated product',
+        price: 100,
+      });
+      expect(updatedProduct).toContain('id');
+      expect(updatedProduct.name).toEqual('updated product');
+      expect(updatedProduct.price).toEqual(100);
     });
 
-    it('should have a show method', () => {
-        expect(productStore.read).toBeDefined();
+    it('returns null if product is not found', async () => {
+      const updatedProduct = await productStore.update(-1, {
+        name: 'updated product',
+        price: 100,
+      });
+      expect(updatedProduct).toBeNull();
     });
+  });
 
-    it('should have a add method', () => {
-        expect(productStore.create).toBeDefined();
+  describe('delete', () => {
+    it('deletes a product by id', async () => {
+      const newProduct = await productStore.create({
+        name: 'new product',
+        price: 50,
+      });
+      const deletedProduct = await productStore.deleteProduct(newProduct.id!);
+      expect(deletedProduct).toContain('id');
+      expect(deletedProduct.name).toEqual('new product');
+      expect(deletedProduct.price).toEqual(50);
+      const product = await productStore.read(newProduct.id!);
+      expect(product).toBeNull();
     });
+  });
 
-    it('should have a delete method', () => {
-        expect(productStore.deleteProduct).toBeDefined();
+  describe('deleteAllProducts', () => {
+    it('deletes all products', async () => {
+      const newProduct1 = await productStore.create({
+        name: 'new product 1',
+        price: 50,
+      });
+      const newProduct2 = await productStore.create({
+        name: 'new product 2',
+        price: 100,
+      });
+      await productStore.deleteAllProducts();
+      const products = await productStore.index();
+      expect(products.length).toEqual(0);
     });
-
-    it('should add a product', async () => {
-        const createdProduct: ProductId = await createProduct(product);
-        expect(createdProduct).toEqual({
-            id: createdProduct.id,
-            name: product.name,
-            price: product.price,
-        });
-        await deleteProduct(createdProduct.id);
-    });
-
-    it('should return a list of products', async () => {
-        const productList: ProductId[] = await productStore.index();
-        expect(productList).toEqual([
-            {
-                id: 1,
-                name: 'Shoes',
-                price: 234,
-            },
-        ]);
-    });
-
-    it('should return the correct product', async () => {
-        const createdProduct: ProductId = await createProduct(product);
-        const productData = await productStore.read(createdProduct.id);
-        expect(productData).toEqual(createdProduct);
-        await deleteProduct(createdProduct.id);
-    });
-
-    it('should update the product', async () => {
-        const createdProduct: ProductId = await createProduct(product);
-        const newProduct: Product = {
-            name: 'New Product List',
-            price: 2423,
-            id: 0
-        };
-        const { name, price } = await productStore.update(createdProduct.id, newProduct);
-        expect(name).toEqual(newProduct.name);
-        expect(price).toEqual(newProduct.price);
-        await deleteProduct(createdProduct.id);
-    });
-
-    it('should remove the product', async () => {
-        const createdProduct: ProductId = await createProduct(product);
-        expect(createdProduct).toEqual({
-            id: createdProduct.id,
-            name: 'Mono',
-            price: 2000,
-        });
-    });
+  });
 });

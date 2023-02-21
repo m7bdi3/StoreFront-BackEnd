@@ -1,8 +1,10 @@
+
+
 import supertest from 'supertest';
-import jwt, { Secret, VerifyErrors, JwtPayload } from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 import { Product } from '../../models/product';
-import { userAuth } from '../../models/user';
-import { app } from '../../server';
+import { UserAuth } from '../../models/user';
+import app from '../../server';
 
 const request = supertest(app);
 const SECRET = process.env.TOKEN_KEY as Secret;
@@ -11,67 +13,53 @@ describe('Product Handler', () => {
   const product: Product = {
     name: 'Basil Barramunda',
     price: 29,
-    id: 0
-  };
-
-  const user: userAuth = {
-    username: 'ChrisAnne',
-    firstname: 'Chris',
-    lastname: 'Anne',
-    password: 'password123',
   };
 
   let token: string, userId: number;
 
   beforeAll(async () => {
-    const { body } = await request.post('/users/create').send(user).catch((err) => {
-      throw err;
-    });
+    const userData: UserAuth = {
+      username: 'ChrisAnne',
+      firstname: 'Chris',
+      lastname: 'Anne',
+      password_digest: 'password123',
+    };
+
+    const { body } = await request.post('/users/create').send(userData);
     token = body;
-    try {
-      const decoded = jwt.verify(body, SECRET) as JwtPayload;
-      userId = decoded.user.id;
-    } catch (err) {
-      console.log(err)
-    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const { user } = toString(jwt).verify(body, SECRET);
+    userId = user.id;
   });
 
   afterAll(async () => {
-    await request.delete(`/users/${userId}`).set('Authorization', 'bearer ' + token).catch((err) => {
-      throw err;
-    });
+    await request.delete(`/users/${userId}`).set('Authorization', 'bearer ' + token);
   });
 
-  it('should create a product', async (done) => {
+  it('gets the create endpoint', async (done) => {
     const res = await request
       .post('/products/create')
       .send(product)
-      .set('Authorization', 'bearer ' + token)
-      .catch((err) => {
-        throw err;
-      });
+      .set('Authorization', 'bearer ' + token);
 
     expect(res.status).toBe(200);
     done();
   });
 
-  it('should get all products', async (done) => {
-    const res = await request.get('/products').catch((err) => {
-      throw err;
-    });
+  it('gets the index endpoint', async (done) => {
+    const res = await request.get('/products');
     expect(res.status).toBe(200);
     done();
   });
 
-  it('should get a single product', async (done) => {
-    const res = await request.get(`/products/1`).catch((err) => {
-      throw err;
-    });
+  it('gets the read endpoint', async (done) => {
+    const res = await request.get(`/products/2`);
     expect(res.status).toBe(200);
     done();
   });
 
-  it('should update a product', async (done) => {
+  it('gets the update endpoint', async (done) => {
     const newProductData: Product = {
       ...product,
       name: 'Shoes',
@@ -80,19 +68,14 @@ describe('Product Handler', () => {
     const res = await request
       .put(`/products/1`)
       .send(newProductData)
-      .set('Authorization', 'bearer ' + token)
-      .catch((err) => {
-        throw err;
-      });
+      .set('Authorization', 'bearer ' + token);
 
     expect(res.status).toBe(200);
     done();
   });
 
-  it('should delete a product', async (done) => {
-    const res = await request.delete(`/products/1`).set('Authorization', 'bearer ' + token).catch((err) => {
-      throw err;
-    });
+  it('gets the delete endpoint', async (done) => {
+    const res = await request.delete(`/products/2`).set('Authorization', 'bearer ' + token);
     expect(res.status).toBe(200);
     done();
   });

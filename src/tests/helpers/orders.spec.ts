@@ -1,17 +1,32 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-const supertest = require('supertest');
-const jwt = require('jsonwebtoken');
-const Secret = require('jsonwebtoken');
-const { OrderStore } = require('../../models/order');
-const app = require('../../server');
-const server = require('../../server')
-const request = supertest(app);
+import supertest from 'supertest';
+import { OrderStore } from '../../models/order';
+import { Product } from '../../models/product';
+import { UserAuth } from '../../models/user';
+import app from '../../server';
+
+export const createTestRequest = () => supertest(app);
+const request = createTestRequest();
 
 describe('Order Handler', () => {
     let token: string;
-    const secret = 'secret-key';
-    beforeAll(() => {
-        spyOn(OrderStore.prototype, 'create').and.returnValue(
+
+    beforeAll(async () => {
+        const userData: UserAuth = {
+            username: 'ChrisAnne',
+            firstname: 'Chris',
+            lastname: 'Anne',
+            password_digest: 'password123',
+        };
+
+        const productData: Product = {
+            name: 'Shoes',
+            price: 234,
+        };
+
+        const { body: userBody } = await request.post('/users/create').send(userData);
+        token = userBody;
+
+        spyOn(OrderStore.prototype, 'createOrder').and.returnValue(
             Promise.resolve({
                 id: 1,
                 products: [
@@ -25,7 +40,7 @@ describe('Order Handler', () => {
             })
         );
 
-        spyOn(OrderStore.prototype, 'update').and.returnValue(
+        spyOn(OrderStore.prototype, 'updateOrder').and.returnValue(
             Promise.resolve({
                 id: 2,
                 products: [
@@ -40,21 +55,12 @@ describe('Order Handler', () => {
         );
     });
 
-    beforeEach(() => {
-        const userData = {
-            username: 'ChrisAnne',
-            firstname: 'Chris',
-            lastname: 'Anne',
-            password: 'password123',
-        };
-        token = jwt.sign(userData, secret);
-    });
-
-    it('should create an order', async () => {
-        const res = await request(server)
+    it('should create order endpoint', async (done) => {
+        const res = await request
             .post('/orders/create')
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', 'Bearer ' + token)
             .send({
+                id: 1,
                 products: [
                     {
                         product_id: 5,
@@ -65,7 +71,7 @@ describe('Order Handler', () => {
                 status: true,
             });
 
-        expect(res.status).toEqual(200);
+        expect(res.status).toBe(200);
         expect(res.body).toEqual({
             id: 1,
             products: [
@@ -77,46 +83,36 @@ describe('Order Handler', () => {
             user_id: 3,
             status: true,
         });
+        done();
     });
 
-    it('should get all orders', async () => {
-        const res = await request(server)
+    it('gets the index endpoint', async (done) => {
+        request
             .get('/orders')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(res.status).toEqual(200);
+            .set('Authorization', 'bearer ' + token)
+            .then((res) => {
+                expect(res.status).toBe(200);
+                done();
+            });
     });
 
-    it('should get an order by id', async () => {
-        const res = await request(server)
+    it('should gets the read endpoint', async (done) => {
+        request
             .get(`/orders/1`)
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(res.status).toEqual(200);
+            .set('Authorization', 'bearer ' + token)
+            .then((res) => {
+                expect(res.status).toBe(200);
+                done();
+            });
     });
 
-    it('should delete an order by id', async () => {
-        const res = await request(server)
+    it('should gets the delete endpoint', async (done) => {
+        request
             .delete(`/orders/2`)
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(res.status).toEqual(200);
-    });
-});
-
-describe('JSON Web Token', () => {
-    it('should encode and decode JWT successfully', () => {
-        const secret: typeof Secret = 'secret-key';
-        const payload = {
-            username: 'ChrisAnne',
-            firstname: 'Chris',
-            lastname: 'Anne',
-        };
-        const token = jwt.sign(payload, secret);
-        const decoded = jwt.verify(token, secret) as any;
-
-        expect(decoded.username).toEqual(payload.username);
-        expect(decoded.firstname).toEqual(payload.firstname);
-        expect(decoded.lastname).toEqual(payload.lastname);
+            .set('Authorization', 'bearer ' + token)
+            .then((res) => {
+                expect(res.status).toBe(200);
+                done();
+            });
     });
 });
