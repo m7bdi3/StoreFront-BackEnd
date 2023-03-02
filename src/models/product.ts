@@ -1,11 +1,11 @@
 import client from '../database';
 
-export interface ProductData  {
+export interface ProductData {
   name: string;
   price: number;
 }
 
-export interface Product extends ProductData  {
+export interface Product extends ProductData {
   id: number;
 }
 
@@ -15,12 +15,8 @@ export class ProductStore {
     try {
 
       const connection = await client.connect();
-      const sql1 = 'TRUNCATE TABLE products RESTART IDENTITY;'
-      const sql2 = 'TRUNCATE TABLE orders RESTART IDENTITY;'
-      const sql3 = 'TRUNCATE TABLE order_products RESTART IDENTITY;'
+      const sql1 = 'TRUNCATE TABLE products RESTART IDENTITY CASCADE;'
       const result1 = await connection.query(sql1);
-      const result2 = await connection.query(sql2);
-      const result3 = await connection.query(sql3);
       connection.release();
       return (result1);
     } catch (err) {
@@ -31,7 +27,7 @@ export class ProductStore {
     try {
 
       const connection = await client.connect();
-      const sql2 = 'TRUNCATE TABLE orders RESTART IDENTITY;'
+      const sql2 = 'TRUNCATE TABLE orders RESTART IDENTITY CASCADE;'
       const result2 = await connection.query(sql2);
       connection.release();
       return (result2);
@@ -43,7 +39,7 @@ export class ProductStore {
     try {
 
       const connection = await client.connect();
-      const sql3 = 'TRUNCATE TABLE order_products RESTART IDENTITY;'
+      const sql3 = 'TRUNCATE TABLE order_products RESTART IDENTITY CASCADE;'
       const result3 = await connection.query(sql3);
       connection.release();
       return (result3);
@@ -62,7 +58,7 @@ export class ProductStore {
       throw new Error(`Can't Get The Product, Because: ${err}`);
     }
   }
-  async create(product: ProductData ): Promise<Product> {
+  async create(product: ProductData): Promise<Product> {
     const { name, price } = product;
     try {
       const sql = 'INSERT INTO products (name, price) VALUES($1, $2) RETURNING *';
@@ -85,7 +81,7 @@ export class ProductStore {
       throw new Error(`Can't Find The Product ${id} Because: ${err}`);
     }
   }
-  async updateById(id: number, productData: ProductData ): Promise<Product> {
+  async updateById(id: number, productData: ProductData): Promise<Product> {
     const { name: newName, price } = productData;
 
     try {

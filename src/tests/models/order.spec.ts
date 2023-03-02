@@ -48,9 +48,19 @@ describe('The Order Model', () => {
     };
   });
 
+afterEach(async() => {
+  await productStore.truncate1();
+  await productStore.truncate2();
+  await productStore.truncate3();  
+})
+
   afterAll(async () => {
-    await userStore.deleteUserById(user_id);
-    await productStore.deleteById(product_id);
+    await userStore.deleteUserById(user_id).catch((error) => {
+      console.error(error);
+    });
+    await productStore.deleteById(product_id).catch((error) => {
+      console.error(error);
+    });
   });
 
   it('Have The Delete Method', () => {
