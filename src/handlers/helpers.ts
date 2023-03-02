@@ -1,28 +1,45 @@
-import jwt, { Secret } from 'jsonwebtoken';
-import { User } from '../models/user';
 import { NextFunction, Request, Response } from 'express';
+import jwt, { Secret, JwtPayload } from 'jsonwebtoken';
+import { User } from '../models/user';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SECRET = process.env.TOKEN_KEY as Secret;
+const TOKEN_KEY: Secret = process.env.TOKEN_KEY as Secret;
 
-export const getTokenByUser = (user: User): string => {
-    return jwt.sign({ user }, SECRET);
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
+const createToken = (user: User): string => {
+  return jwt.sign({ user }, TOKEN_KEY);
 };
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.headers.authorization) {
-        res.status(401).json({ error: 'Access denied, invalid token' });
-        return;
-    }
+const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers.authorization;
 
-    try {
-        const token = req.headers.authorization.split(' ')[1];
-        jwt.verify(token, SECRET);
-        next();
-    } catch (error) {
-        res.status(401).json({ error: 'Access denied, invalid token' });
-        return;
-    }
+  if (!authHeader) {
+    res.status(401).json({ error: 'Invalid or missing token.' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decodedToken = jwt.verify(token, TOKEN_KEY) as JwtPayload;
+    req.user = decodedToken.user as User;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+};
+
+export {
+  createToken,
+  verifyToken,
+  TOKEN_KEY,
 };

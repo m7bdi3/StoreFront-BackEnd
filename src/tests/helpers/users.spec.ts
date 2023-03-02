@@ -1,97 +1,81 @@
-import supertest from 'supertest';
+import { UserCredentials } from '../../models/user';
 import jwt, { Secret } from 'jsonwebtoken';
-
-import { UserAuth } from '../../models/user';
+import supertest from 'supertest';
 import app from '../../server';
 
+const Secret_Token_Key = process.env.TOKEN_KEY as Secret;
 const request = supertest(app);
-const SECRET = process.env.TOKEN_KEY as Secret;
 
-describe('User Handler', () => {
-  const userData: UserAuth = {
-    username: 'ChrisAnne',
-    firstname: 'Chris',
-    lastname: 'Anne',
-    password_digest: 'password123',
-  };
 
-  let token: string,
-    userId = 1;
-
-  it('should gets the create endpoint', async (done) => {
-    const res = await request.post('/users/create').send(userData);
-
-    const { body, status } = res;
-    token = body.token; // only set the token string
-    console.log(token)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const { user } = jwt.verify(token, SECRET);
-    userId = user.id;
-
-    expect(status).toBe(200);
-    done();
-  });
-
-  it('should gets the index endpoint', async (done) => {
-    const res = await request.get('/users').set('Authorization', 'bearer ' + token);
-
-    expect(res.status).toBe(200);
-    done();
-  });
-
-  it('should get the read endpoint', async (done) => {
-    const res = await request.get(`/users/${userId}`).set('Authorization', 'bearer ' + token);
-
-    expect(res.status).toBe(200);
-    done();
-  });
-
-  it('should get the update endpoint', async (done) => {
-    const newUserData: UserAuth = {
-      ...userData,
-      firstname: 'Chris',
-      lastname: 'Anne',
+describe('Handler The User', () => {
+    const dataOfUser: UserCredentials = {
+        username: 'jackjones',
+        firstname: 'jack',
+        lastname: 'jones',
+        password: 'password123',
     };
 
-    const res = await request
-      .put(`/users/${userId}`)
-      .send(newUserData)
-      .set('Authorization', 'bearer ' + token);
+    let theToken: string;
+    let idOfUser = 1;
 
-    expect(res.status).toBe(200);
-    done();
-  });
+    it('Get The Create End-Point', async () => {
+        const res = await request.post('/usersroutes/create').send(dataOfUser);
+        const { body, status } = res;
+        theToken = body;
 
-  it('should get the auth endpoint', async (done) => {
-    const res = await request
-      .post('/users/authenticate')
-      .send({
-        username: userData.username,
-        password: userData.password_digest,
-      })
-      .set('Authorization', 'bearer ' + token);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { user } = jwt.verify(theToken, Secret_Token_Key);
+        idOfUser = user.id;
+        expect(status).toBe(200);
+    });
 
-    expect(res.status).toBe(200);
-    done();
-  });
+    // Test the Delete End-Point after the user is created
+    it('Get The Delete End-Point', async () => {
+        const res = await request.delete(`/usersroutes/${idOfUser}`).set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(200);
+    });
 
-  it('should get the auth endpoint with wrong password', async (done) => {
-    const res = await request
-      .post('/users/authenticate')
-      .send({
-        username: userData.username,
-        password: 'trtdtxcfcf',
-      })
-      .set('Authorization', 'bearer ' + token);
+    it('Get The Index End-Point', async () => {
+        const res = await request.get('/usersroutes').set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(200);
 
-    expect(res.status).toBe(401);
-    done();
-  });
+    });
 
-  it('should get the delete endpoint', async (done) => {
-    const res = await request.delete(`/users/${userId}`).set('Authorization', 'bearer ' + token);
-    expect(res.status).toBe(200);
-    done();
-  });
+    it('Get The Read End-Point', async () => {
+        const res = await request.get(`/usersroutes/${idOfUser}`).set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(200);
+
+    });
+
+    it('Get The Update End-Point', async () => {
+        const newdataOfUser: UserCredentials = {
+            ...dataOfUser,
+            firstname: 'jack',
+            lastname: 'jones',
+        };
+        const res = await request.put(`/usersroutes/${idOfUser}`).send(newdataOfUser).set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(200);
+
+    });
+
+    it('Get The Authenticate End-Pont', async () => {
+        const res = await request.post('/usersroutes/authenticate').send({
+            username: dataOfUser.username,
+            password: dataOfUser.password,
+        }).set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(200);
+
+    });
+
+    it('Get The Authenticate With Wrong Password', async () => {
+        const res = await request.post('/usersroutes/authenticate')
+            .send({
+                username: dataOfUser.username,
+                password: 'trtdtxcfcf',
+            })
+            .set('Authorization', 'bearer ' + theToken);
+        expect(res.status).toBe(401);
+    });
+
 });

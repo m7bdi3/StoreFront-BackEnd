@@ -2,180 +2,76 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <link rel="stylesheet" href="style.css">
-  <title>Udacity Storefront</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
 
 <body>
-  <div class="container">
-    <h1 class="title">Welcome to the Udacity Storefront</h1>
-    <p class="description">The following routes are supported:</p>
-    <div class="section">
-      <div class="card">
-        <h2 class="card-header">Users</h2>
-        <div class="card-body">
-          <button id="index-users-btn">Index Users</button>
-          <button id="create-users-btn[]">Create User</button>
-          <button id="read-users-btn">Read User</button>
-          <button id="update-users-btn">Update User</button>
-          <button id="delete-users-btn">Delete User</button>
-          <button id="auth-users-btn">Auth User</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2 class="card-header">Products</h2>
-        <div class="card-body">
-          <button id="index-products-btn">Index Products</button>
-          <button id="create-products-btn">Create Product</button>
-          <button id="read-products-btn">Read Product</button>
-          <button id="update-products-btn">Update Product</button>
-          <button id="delete-products-btn">Delete Product</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2 class="card-header">Orders</h2>
-        <div class="card-body">
-          <button id="index-orders-btn">Index Orders</button>
-          <button id="create-orders-btn">Create Order</button>
-          <button id="read-orders-btn">Read Order</button>
-          <button id="update-orders-btn">Update Order</button>
-          <button id="delete-orders-btn">Delete Order</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="response"></div>
+    <form method="POST" action="/usersroutes/create">
+        <label>
+            First Name:
+            <input type="text" name="firstname">
+        </label>
+        <br>
+        <label>
+            Last Name:
+            <input type="text" name="lastname">
+        </label>
+        <br>
+        <label>
+            Username:
+            <input type="text" name="username">
+        </label>
+        <br>
+        <label>
+            Password:
+            <input type="password" name="password">
+        </label>
+        <br>
+        <button type="submit">Create User</button>
+    </form>
+
+
+    <form method="GET" action="/usersroutes">
+        <button type="submit">List Users</button>
+    </form>
+
+
+    <form method="GET" action="/usersroutes/:id">
+        <label>
+            User ID:
+            <input type="text" name="id">
+        </label>
+        <br>
+        <button type="submit">Get User</button>
+    </form>
+
+
+    <form method="PUT" action="/usersroutes/:id">
+        <label>
+            First Name:
+            <input type="text" name="firstname">
+        </label>
+        <br>
+        <label>
+            Last Name:
+            <input type="text" name="lastname">
+        </label>
+        <br>
+        <button type="submit">Update User</button>
+    </form>
+
+    <form method="DELETE" action="/usersroutes/:id">
+        <label>
+            User ID:
+            <input type="text" name="id">
+        </label>
+        <br>
+        <button type="submit">Delete User</button>
+    </form>
+
 </body>
-
-
-
-<script>
-  // Define a function to make the API request
-  const makeRequest = async (url, method = 'GET') => {
-    const response = await fetch(url, {
-      method
-    });
-    const data = await response.json();
-    console.log(data);
-    document.querySelector("#response").innerHTML = JSON.stringify(data, null, 2);
-  };
-  // Users API routes
-  const testUsersIndexBtn = document.querySelector("#test-users-index-btn");
-  testUsersIndexBtn.addEventListener("click", async () => {
-    makeRequest("/users", 'GET');
-  });
-
-  const testUsersCreateBtn = document.querySelector("#test-users-create-btn");
-  testUsersCreateBtn.addEventListener("click", async () => {
-    makeRequest("/users/create", 'POST');
-  });
-
-  const testUsersReadBtn = document.querySelector("#test-users-read-btn");
-  testUsersReadBtn.addEventListener("click", async () => {
-    makeRequest("/users/1", 'GET');
-  });
-
-  const testUsersUpdateBtn = document.querySelector("#test-users-update-btn");
-  testUsersUpdateBtn.addEventListener("click", async () => {
-    makeRequest("/users/1", 'PUT');
-  });
-
-  const testUsersDeleteBtn = document.querySelector("#test-users-delete-btn");
-  testUsersDeleteBtn.addEventListener("click", async () => {
-    makeRequest("/users/1", 'DELETE');
-  });
-
-  const testUsersAuthBtn = document.querySelector("#test-users-auth-btn");
-  testUsersAuthBtn.addEventListener("click", async () => {
-    makeRequest("/users/auth", 'POST');
-  });
-
-  // Products API routes
-  const testProductsIndexBtn = document.querySelector("#test-products-index-btn");
-  testProductsIndexBtn.addEventListener("click", async () => {
-    makeRequest("/products", 'GET');
-  });
-
-  const testProductsCreateBtn = document.querySelector("#test-products-create-btn");
-  testProductsCreateBtn.addEventListener("click", async () => {
-    makeRequest("/products/create", 'POST');
-  });
-
-  const testProductsReadBtn = document.querySelector("#test-products-read-btn");
-  testProductsReadBtn.addEventListener("click", async () => {
-    makeRequest("/products/1", 'GET');
-  });
-
-  const testProductsUpdateBtn = document.querySelector("#test-products-update-btn");
-  testProductsUpdateBtn.addEventListener("click", async () => {
-    makeRequest("/products/1", 'PUT');
-  });
-
-  const testProductsDeleteBtn = document.querySelector("#test-products-delete-btn");
-  testProductsDeleteBtn.addEventListener("click", async () => {
-    makeRequest("/products/1", 'DELETE');
-  });
-
-  // Orders API routes
-  const testOrdersIndexRouteBtn = document.querySelector("#test-orders-index-route-btn");
-  testOrdersIndexRouteBtn.addEventListener("click", async () => {
-    const response = await fetch("/orders");
-    const data = await response.json();
-    console.log(data);
-  });
-
-  const testOrdersCreateRouteBtn = document.querySelector("#test-orders-create-route-btn");
-  testOrdersCreateRouteBtn.addEventListener("click", async () => {
-    const response = await fetch("/orders/create", {
-      method: "POST",
-      body: JSON.stringify({
-        /* request body */
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    const data = await response.json();
-    console.log(data);
-  });
-
-  const testOrdersReadRouteBtn = document.querySelector("#test-orders-read-route-btn");
-  testOrdersReadRouteBtn.addEventListener("click", async () => {
-    const orderId = "set order id";
-    const response = await fetch(`/orders/${orderId}`);
-    const data = await response.json();
-    console.log(data);
-  });
-
-  const testOrdersUpdateRouteBtn = document.querySelector("#test-orders-update-route-btn");
-  testOrdersUpdateRouteBtn.addEventListener("click", async () => {
-    const orderId = "set order id";
-    const response = await fetch(`/orders/${orderId}`, {
-      method: "PUT",
-      body: JSON.stringify({
-        /* request body */
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    const data = await response.json();
-    console.log(data);
-  });
-
-  const testOrdersDeleteRouteBtn = document.querySelector("#test-orders-delete-route-btn");
-  testOrdersDeleteRouteBtn.addEventListener("click", async () => {
-    const orderId = "set order id";
-    const response = await fetch(`/orders/${orderId}`, {
-      method: "DELETE"
-    });
-    const data = await response.json();
-    console.log(data);
-  });
-</script>
 
 </html>

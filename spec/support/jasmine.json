@@ -4,7 +4,7 @@
     "**/*[sS]pec.js"
   ],
   "helpers": [
-    "helpers/**/*.js"
+    "helpers/**/*[sS]pec.js"
   ],
   "reporters": [{
     "name": "jasmine-spec-reporter#SpecReporter",

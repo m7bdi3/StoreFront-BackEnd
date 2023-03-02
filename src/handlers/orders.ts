@@ -1,80 +1,98 @@
+import { Order, OrderProduct, OrderStore } from '../models/order';
 import { Application, Request, Response } from 'express';
 import { verifyToken } from './helpers';
-import { ProductOrder, Order, OrderDB, OrderStore } from '../models/order';
 
-const OrderStoreInstance = new OrderStore();
+const OrderStores = new OrderStore();
 
-const index = async (req: Request, res: Response) => {
+const index = async (_req: Request, res: Response) => {
   try {
-    const orders = await OrderStoreInstance.getOrders();
+    const orders: Order[] = await OrderStores.getOrder();
     res.json(orders);
-  } catch (err: unknown) {
-    console.error((err as Error).message);
-    res.status(400).json({ error: (err as Error).message });
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  };
+};
+
+const readingTheOrder = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as unknown as number;
+    if (!id) {
+      res.status(400).send(`couldn't find order with id : ${id}`)
+      return false;
+    }
+    const order: Order = await OrderStores.read(id);
+    res.json(order);
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
+};
+
+const deleteTheOrder = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as unknown as number;
+    if (!id) {
+      res.status(400).send(`Couldn't find id: ${id}`)
+      return false;
+    }
+    await OrderStores.deleteTheOrder(id);
+    res.status(200).send(`Order deleted`)
+  } catch (err) {
+    res.status(400);
+    res.json(err);
   }
 };
 
 const create = async (req: Request, res: Response) => {
   try {
-    const { products, status, user_id } = req.body as Order;
+    const products = req.body.products as unknown as OrderProduct[];
+    const status = req.body.status as unknown as boolean;
+    const user_id = req.body.user_id as unknown as number;
     if (!products || !status || !user_id) {
-      return res.status(400).send('Some required parameters are missing! eg. :products, :status, :user_id');
-    }
-    const order = await OrderStoreInstance.createOrder({ products, status, user_id });
+      res.status(400).send(`Couldn't Create order ${products}`)
+      return false;
+    };
+    const order: Order = await OrderStores.create({
+      products,
+      status,
+      user_id,
+    });
     res.json(order);
-  } catch (err: unknown) {
-    console.error((err as Error).message);
-    res.status(400).json({ error: (err as Error).message });
-  }
-};
-
-const read = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (!id) {
-      return res.status(400).send('Missing required parameter :id.');
-    }
-    const order = await OrderStoreInstance.readOrder(id);
-    res.json(order);
-  } catch (err: unknown) {
-    console.error((err as Error).message);
-    res.status(400).json({ error: (err as Error).message });
+  } catch (err) {
+    res.status(400);
+    res.json(err);
   }
 };
 
 const update = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
-    const { products, status, user_id } = req.body as Order;
-    if (!products || !status || !user_id) {
-      return res.status(400).send('Some required parameters are missing! eg. :products, :status, :user_id');
+    const id = req.params.id as unknown as number;
+    const products = req.body.products as unknown as OrderProduct[];
+    const status = req.body.status as unknown as boolean;
+    const user_id = req.body.user_id as unknown as number;
+    if (!products || !status || !user_id || !id) {
+      res.status(400).send(`Could not update order with id ${id}`);
+      return false;
     }
-    const order = await OrderStoreInstance.updateOrder(id, { products, status, user_id });
+    const order: Order = await OrderStores.update(id, {
+      products,
+      status,
+      user_id,
+    });
     res.json(order);
-  } catch (err: unknown) {
-    console.error((err as Error).message);
-    res.status(400).json({ error: (err as Error).message });
+  } catch (err) {
+    res.status(400);
+    res.json(err);
   }
 };
 
-const deleteOrder = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (!id) {
-      return res.status(400).send('Missing required parameter :id.');
-    }
-    await OrderStoreInstance.deleteOrder(id);
-    res.send(`Order with id ${id} successfully deleted.`);
-  } catch (err: unknown) {
-    console.error((err as Error).message);
-    res.status(400).json({ error: (err as Error).message });
-  }
-};
-
-export default function orderRoutes(app: Application) {
-  app.get('/orders', index);
-  app.post('/orders/create', verifyToken, create);
-  app.get('/orders/:id', verifyToken, read);
-  app.put('/orders/:id', verifyToken, update);
-  app.delete('/orders/:id', verifyToken, deleteOrder);
+const ordersRoutes = (app: Application) => {
+  app.delete('/ordersroutes/:id', verifyToken, deleteTheOrder);
+  app.get('/ordersroutes/:id', verifyToken, readingTheOrder);
+  app.post('/ordersroutes/create', verifyToken, create);
+  app.put('/ordersroutes/:id', verifyToken, update);
+  app.get('/ordersroutes', index);
 }
+
+export default ordersRoutes;

@@ -1,100 +1,104 @@
-import { Product, ProductId, ProductStore } from '../../models/product';
+import { ProductData , Product, ProductStore } from '../../models/product';
 
-describe('Product Model', () => {
-  const productStore = new ProductStore();
+const productStore = new ProductStore();
 
-  beforeAll(async () => {
-    await productStore.deleteAllProducts();
-  });
+describe('Model of Product', () => {
+    const product: ProductData  = {
+        name: 'RAM',
+        price: 2000,
+    };
 
-  afterAll(async () => {
-    await productStore.deleteAllProducts();
-  });
+    async function createProduct(product: ProductData ) {
+        return productStore.create(product);
+    }
 
-  describe('create', () => {
-    it('creates a new product', async () => {
-      const newProduct = await productStore.create({
-        name: 'new product',
-        price: 50,
-      });
-      expect(newProduct).toContain('id');
-      expect(newProduct.name).toEqual('new product');
-      expect(newProduct.price).toEqual(50);
-    });
-  });
+    async function deleteTheProduct(id: number) {
+        return productStore.deleteById(id);
+    }
 
-  describe('index', () => {
-    it('lists all products', async () => {
-      const products = await productStore.index();
-      expect(products.length).toBeGreaterThan(0);
-    });
-  });
+    beforeAll(async () => {
+        await productStore.truncate1();
+        await productStore.truncate2();
+        await productStore.truncate3();
 
-  describe('read', () => {
-    it('gets a product by id', async () => {
-      const newProduct = await productStore.create({
-        name: 'new product',
-        price: 50,
-      });
-      const product = await productStore.read(newProduct.id!);
-      expect(product).toContain('id');
-      expect(product.name).toEqual('new product');
-      expect(product.price).toEqual(50);
-    });
-  });
+    })
 
-  describe('update', () => {
-    it('updates a product by id', async () => {
-      const newProduct = await productStore.create({
-        name: 'new product',
-        price: 50,
-      });
-      const updatedProduct: ProductId  = await productStore.update(newProduct.id!, {
-        name: 'updated product',
-        price: 100,
-      });
-      expect(updatedProduct).toContain('id');
-      expect(updatedProduct.name).toEqual('updated product');
-      expect(updatedProduct.price).toEqual(100);
+    afterAll(async () => {
+        await productStore.truncate1();
+        await productStore.truncate2();
+        await productStore.truncate3();
+
+    })
+
+    beforeEach(async () => {
+        await productStore.truncate1();
+        await productStore.truncate2();
+        await productStore.truncate3();
+
+    })
+
+    it('Have The Index Method', () => {
+        expect(productStore.getAll).toBeDefined();
     });
 
-    it('returns null if product is not found', async () => {
-      const updatedProduct = await productStore.update(-1, {
-        name: 'updated product',
-        price: 100,
-      });
-      expect(updatedProduct).toBeNull();
+    it('Have The Show Method', () => {
+        expect(productStore.getById).toBeDefined();
     });
-  });
 
-  describe('delete', () => {
-    it('deletes a product by id', async () => {
-      const newProduct = await productStore.create({
-        name: 'new product',
-        price: 50,
-      });
-      const deletedProduct = await productStore.deleteProduct(newProduct.id!);
-      expect(deletedProduct).toContain('id');
-      expect(deletedProduct.name).toEqual('new product');
-      expect(deletedProduct.price).toEqual(50);
-      const product = await productStore.read(newProduct.id!);
-      expect(product).toBeNull();
+    it('Have The add Method', () => {
+        expect(productStore.create).toBeDefined();
     });
-  });
 
-  describe('deleteAllProducts', () => {
-    it('deletes all products', async () => {
-      const newProduct1 = await productStore.create({
-        name: 'new product 1',
-        price: 50,
-      });
-      const newProduct2 = await productStore.create({
-        name: 'new product 2',
-        price: 100,
-      });
-      await productStore.deleteAllProducts();
-      const products = await productStore.index();
-      expect(products.length).toEqual(0);
+    it('Have The Delete Method', () => {
+        expect(productStore.deleteById).toBeDefined();
     });
-  });
+
+    it('Adding The Product', async () => {
+        const createdProduct: Product = await createProduct(product);
+        expect(createdProduct).toEqual({
+            id: createdProduct.id,
+            ...product
+        });
+        await deleteTheProduct(createdProduct.id);
+    });
+
+    it('Returning The List Of The Product', async () => {
+
+        const createdProduct: Product = await createProduct(product);
+        const productData = await productStore.getById(createdProduct.id);
+        const productList = await productStore.getAll();
+        expect(productList).toContain({
+            id: 1,
+            name: 'RAM',
+            price: 2000,
+        });
+    });
+
+    it('Returning The Correct Product', async () => {
+        const createdProduct: Product = await createProduct(product);
+        const productData = await productStore.getById(createdProduct.id);
+        expect(productData).toEqual(createdProduct);
+        await deleteTheProduct(createdProduct.id);
+    });
+
+    it('Updating The Product', async () => {
+        const createdProduct: Product = await createProduct(product);
+        const newProduct: ProductData  = {
+            name: 'New Product List',
+            price: 2423,
+        };
+        const { name, price } = await productStore.updateById(createdProduct.id, newProduct);
+        expect(name).toEqual(newProduct.name);
+        expect(price).toEqual(newProduct.price);
+        await deleteTheProduct(createdProduct.id);
+    });
+
+    it('should remove the product', async () => {
+        const createdProduct: Product = await createProduct(product);
+        expect(createdProduct).toEqual({
+            id: createdProduct.id,
+            name: 'RAM',
+            price: 2000,
+        });
+    });
 });

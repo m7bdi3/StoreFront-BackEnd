@@ -1,90 +1,109 @@
-import { User, UserAuth, UserStore } from '../../models/user';
+import { UserCredentials, UserFront, User, UserStore } from '../../models/user';
 
 const userStore = new UserStore();
 
-describe('User Model', () => {
-  const user: UserAuth = {
-    username: 'ChrisAnne',
-    firstname: 'Chris',
-    lastname: 'Anne',
-    password_digest: 'password123',
+describe('Model of User', () => {
+  const user: UserCredentials = {
+    username: 'jackjones',
+    firstname: 'jack',
+    lastname: 'jones',
+    password: 'password123',
   };
 
-  async function createUser(user: UserAuth): Promise<User> {
-    return userStore.create(user);
+
+
+  async function createUser(user: UserCredentials) {
+    return userStore.createUser(user)
+
   }
 
+  console.log(user);
 
-  async function deleteUser(id: number): Promise<void> {
-    const result = await userStore.deleteUser(id);
-    if (!result) {
-      throw new Error(`Failed to delete user with ID ${id}`);
-    }
+  async function deleteTheUser(id: number) {
+    return userStore.deleteUserById(id);
   }
 
+  beforeAll(async () => {
+    await userStore.truncate();
 
+  })
 
-  it('should have getUser method', () => {
+  afterAll(async () => {
+    await userStore.truncate();
+  })
+
+  beforeEach(async () => {
+    await userStore.truncate();
+
+  })
+
+  it('Have The Get User Method', () => {
     expect(userStore.getUser).toBeDefined();
   });
 
-  it('should have a show method', () => {
-    expect(userStore.read).toBeDefined();
+  it('Have The Show Method', () => {
+    expect(userStore.getUser).toBeDefined();
   });
 
-  it('should have a create method', () => {
-    expect(userStore.create).toBeDefined();
+  it('Have The Create Method', () => {
+    expect(userStore.createUser).toBeDefined();
   });
 
-  it('should have a remove method', () => {
-    expect(userStore.deleteUser).toBeDefined();
+  it('Have The Remove Method', () => {
+    expect(userStore.deleteUserById).toBeDefined();
   });
 
-  it('should create a user', async () => {
-    const createdUser: User = await createUser(user);
+  it('Createing The New User', async () => {
+    const createdUser = await createUser(user);
+    console.log(createdUser);
+
     if (createdUser) {
+
       expect(createdUser.username).toBe(user.username);
+
       expect(createdUser.firstname).toBe(user.firstname);
       expect(createdUser.lastname).toBe(user.lastname);
     }
-    await deleteUser(createdUser.id);
+    await deleteTheUser(createdUser.id);
   });
 
-  it('should return a list of users', async () => {
-    const result: any = await userStore.getUser();
-    expect(result[0].username).toEqual('ChrisAnne');
-    expect(result[0].id).toEqual(1);
-    expect(result[0].firstname).toEqual('Chris');
-    expect(result[0].lastname).toEqual('Anne');
+  it('Returning The List of Users', async () => {
+    const createdUser = await createUser(user);
+    console.log(createdUser);
+    const result = await userStore.getUser();
+    if (createdUser) {
+      expect(result[0].username).toEqual('jackjones');
+      expect(result[0].id).toEqual(1);
+      expect(result[0].firstname).toEqual('jack');
+      expect(result[0].lastname).toEqual('jones');
+    }
+    await deleteTheUser(createdUser.id);
   });
 
-  it(' should return the correct users', async () => {
+  it('Returning The Correct User', async () => {
     const createdUser: User = await createUser(user);
-    const users = await userStore.read(createdUser.id);
+    const users = await userStore.getUserById(createdUser.id);
     expect(users).toEqual(createdUser);
-    await deleteUser(createdUser.id);
+    await deleteTheUser(createdUser.id);
   });
 
-  it('should remove the user', async () => {
+  it('Removing The User', async () => {
     const createdUser: User = await createUser(user);
-    await deleteUser(createdUser.id);
-    expect(createdUser.firstname).toEqual('Chris');
-    expect(createdUser.lastname).toEqual('Anne');
+    await deleteTheUser(createdUser.id);
+    expect(createdUser.firstname).toEqual('jack');
+    expect(createdUser.lastname).toEqual('jones');
   });
 
-  it('should update the user', async () => {
+  it('Updating The User', async () => {
     const createdUser: User = await createUser(user);
-    const newUserData: UserAuth = {
-      firstname: 'Kris',
-      lastname: 'Han',
-      username: '',
-      password_digest: ''
+    const newdataOfUser: UserFront = {
+      firstname: 'sara',
+      lastname: 'jack',
     };
 
-    const { firstname, lastname } = await userStore.update(createdUser.id, newUserData);
-    expect(firstname).toEqual(newUserData.firstname);
-    expect(lastname).toEqual(newUserData.lastname);
-
-    await deleteUser(createdUser.id);
+    const { firstname, lastname } = await userStore.updateUser(createdUser.id, newdataOfUser);
+    expect(firstname).toEqual(newdataOfUser.firstname);
+    expect(lastname).toEqual(newdataOfUser.lastname);
+    await deleteTheUser(createdUser.id);
   });
 });

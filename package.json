@@ -4,7 +4,7 @@
   "description": "A Storefront Backend",
   "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "nodemon dist/server.js",
     "build": "tsc --esModuleInterop src/server.ts --outDir ./dist",
     "watch": "npm run build -- --watch",
     "lint": "eslint src",
@@ -20,13 +20,12 @@
   },
   "author": "Mohamed Mahmoud AbdElbadie Hasan",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "db-migrate": "^0.11.13",
     "db-migrate-pg": "^1.2.2",
-    "dotenv": "^16.0.1",
+    "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",

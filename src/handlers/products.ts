@@ -1,89 +1,93 @@
-import { Application, Request, Response } from 'express';
 import { Product, ProductStore } from '../models/product';
+import { Application, Request, Response } from 'express';
 import { verifyToken } from './helpers';
 
-const productStore = new ProductStore();
+const productStores = new ProductStore();
 
-const getAllProducts = async (req: Request, res: Response) => {
-    try {
-        const products: Product[] = await productStore.index();
-        res.json(products);
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
-    }
+const gettingTheProducts = async (_req: Request, res: Response) => {
+  try {
+    const products: Product[] = await productStores.getAll();
+    res.json(products);
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
 };
 
-const createProduct = async (req: Request, res: Response) => {
-    try {
-        const { name, price } = req.body;
-
-        if (!name || !price) {
-            return res.status(400).json({ error: 'Missing required parameters: name and price' });
-        }
-
-        const product: Product = await productStore.create({ name, price });
-
-        res.status(201).json({ product });
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
+const deleteTheProduct = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as unknown as number;
+    if (!id) {
+      res.status(400).send(`Couldn't delete product with id: ${id}`);
+      return false;
     }
+    await productStores.deleteById(id);
+    res.status(200).send(`Updated product with id: ${id}`);
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
 };
 
-const readProduct = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-
-        if (!id) {
-            return res.status(400).json({ error: 'Missing required parameter: id' });
-        }
-
-        const product: Product = await productStore.read(Number(id));
-
-        res.json(product);
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
+const create = async (req: Request, res: Response) => {
+  try {
+    const name = req.body.name as unknown as string;
+    const price = req.body.price as unknown as number;
+    if (!name || !price) {
+      res.status(400).send(`Couldn't create product with name: ${name}`);
+      return false;
     }
+    const product: Product = await productStores.create({ name, price });
+    res.json({
+      product,
+    });
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
 };
 
-
-const updateProduct = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { name, price } = req.body;
-
-        if (!name || !price || !id) {
-            return res.status(400).json({ error: 'Missing required parameters: id, name, and price' });
-        }
-
-        const product: Product | null 
-            = await productStore.update(Number(id), { id: Number(id), name, price });
-
-        res.json(product);
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
+const update = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as unknown as number;
+    const name = req.body.name as unknown as string;
+    const price = req.body.price as unknown as number;
+    if (!name || !price || !id) {
+      res.status(400).send(`Couldn't Update product with id: ${id}`);
+      return false;
     }
+    const product: Product = await productStores.updateById(id, {
+      name,
+      price,
+    });
+    res.json(product);
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
 };
 
-const deleteProduct = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-
-        if (!id) {
-            return res.status(400).json({ error: 'Missing required parameter: id' });
-        }
-
-        await productStore.deleteProduct(Number(id));
-
-        res.json({ message: `Product with id ${id} has been deleted` });
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
+const readingTheProcuts = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as unknown as number;
+    if (!id) {
+      res.status(400).send(`Couldn't find product with id: ${id}`);
+      return false;
     }
+    const product: Product = await productStores.getById(id);
+    res.json(product);
+  } catch (err) {
+    res.status(400);
+    res.json(err);
+  }
 };
 
-export default function productRoutes(app: Application) {
-    app.get('/products', getAllProducts);
-    app.post('/products/create', verifyToken, createProduct);
-    app.get('/products/:id', readProduct);
-    app.put('/products/:id', verifyToken, updateProduct);
-    app.delete('/products/:id', verifyToken, deleteProduct);
-}
+const productsRoutes = (app: Application) => {
+  app.delete('/productsroutes/:id', verifyToken, deleteTheProduct);
+  app.post('/productsroutes/create', verifyToken, create);
+  app.put('/productsroutes/:id', verifyToken, update);
+  app.get('/productsroutes/:id', readingTheProcuts);
+  app.get('/productsroutes', gettingTheProducts);
+};
+
+export default productsRoutes;
