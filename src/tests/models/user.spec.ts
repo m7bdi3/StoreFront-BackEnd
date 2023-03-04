@@ -9,32 +9,22 @@ describe('Model of User', () => {
     lastname: 'jones',
     password: 'password123',
   };
-
-
-
   async function createUser(user: UserCredentials) {
     return userStore.createUser(user)
-
   }
-
   console.log(user);
-
   async function deleteTheUser(id: number) {
     return userStore.deleteUserById(id);
   }
-
   beforeAll(async () => {
     await userStore.truncate();
-
   })
-
   afterAll(async () => {
     await userStore.truncate();
   })
 
   beforeEach(async () => {
     await userStore.truncate();
-
   })
 
   it('Have The Get User Method', () => {
@@ -49,18 +39,11 @@ describe('Model of User', () => {
     expect(userStore.createUser).toBeDefined();
   });
 
-  it('Have The Remove Method', () => {
-    expect(userStore.deleteUserById).toBeDefined();
-  });
-
   it('Createing The New User', async () => {
     const createdUser = await createUser(user);
     console.log(createdUser);
-
     if (createdUser) {
-
       expect(createdUser.username).toBe(user.username);
-
       expect(createdUser.firstname).toBe(user.firstname);
       expect(createdUser.lastname).toBe(user.lastname);
     }

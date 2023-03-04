@@ -21,44 +21,53 @@ export class OrderStore {
       const connection = await client.connect();
       const sql = 'SELECT * FROM orders';
       const { rows } = await connection.query(sql);
-      const orderProductsSql = 'SELECT product_id, quantity FROM order_products WHERE order_id=($1)';
+
       const orders = [];
+
       for (const order of rows) {
-        const { rows: orderProductRows } = await connection.query(orderProductsSql, [order.id]);
+        const orderProductsSql =
+          'SELECT product_id, quantity FROM order_products WHERE order_id=($1)';
+        const { rows: orderProductRows } = await connection.query(
+          orderProductsSql,
+          [order.id]
+        );
         orders.push({
           ...order,
           products: orderProductRows,
         });
       }
+
       connection.release();
       return orders;
     } catch (err) {
       throw new Error(`Can't Get The Order, Because: ${err}`);
     }
   }
-  async create(order: OrderData): Promise<Order> {
-    const { products, status, user_id } = order;
+  async create(orderData: OrderData): Promise<Order> {
+    const { products, status, user_id } = orderData;
     try {
       const sql = 'INSERT INTO orders (user_id, status) VALUES($1, $2) RETURNING *';
       const connection = await client.connect();
       const { rows } = await connection.query(sql, [user_id, status]);
-      const order = rows[0];
+      const orderRow = rows[0];
       const orderProductsSql = 'INSERT INTO order_products (order_id, product_id, quantity) VALUES($1, $2, $3) RETURNING product_id, quantity';
       const orderProducts = [];
       for (const product of products) {
         const { product_id, quantity } = product;
-        const { rows } = await connection.query(orderProductsSql, [order.id, product_id, quantity]);
+        const { rows } = await connection.query(orderProductsSql, [orderRow.id, product_id, quantity]);
         orderProducts.push(rows[0]);
       }
       connection.release();
       return {
-        ...order,
+        ...orderRow,
         products: orderProducts,
       };
     } catch (err) {
       throw new Error(`Can't Add The Order For User: ${user_id} Because: ${err}`);
     }
   }
+
+
   async read(id: number): Promise<Order> {
     try {
       const sql = 'SELECT * FROM orders WHERE id=($1)';
@@ -117,3 +126,29 @@ export class OrderStore {
     }
   }
 }
+
+
+
+  // async create(order: OrderData): Promise<Order> {
+  //   const { products, status, user_id } = order;
+  //   try {
+  //     const sql = 'INSERT INTO orders (user_id, status) VALUES($1, $2) RETURNING *';
+  //     const connection = await client.connect();
+  //     const { rows } = await connection.query(sql, [user_id, status]);
+  //     const order = rows[0];
+  //     const orderProductsSql = 'INSERT INTO order_products (order_id, product_id, quantity) VALUES($1, $2, $3) RETURNING product_id, quantity';
+  //     const orderProducts = [];
+  //     for (const product of products) {
+  //       const { product_id, quantity } = product;
+  //       const { rows } = await connection.query(orderProductsSql, [order.id, product_id, quantity]);
+  //       orderProducts.push(rows[0]);
+  //     }
+  //     connection.release();
+  //     return {
+  //       ...order,
+  //       products: orderProducts,
+  //     };
+  //   } catch (err) {
+  //     throw new Error(`Can't Add The Order For User: ${user_id} Because: ${err}`);
+  //   }
+  // }
